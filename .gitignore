@@ -1,0 +1,7 @@
+.env
+__pycache__/
+*.py[cod]
+staticfiles/
+media/
+frontend/node_modules/
+frontend/.next/
