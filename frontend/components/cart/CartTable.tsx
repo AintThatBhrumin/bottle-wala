@@ -4,6 +4,7 @@ import Image from "next/image";
 import { ImagePlus, Trash2 } from "lucide-react";
 
 import { QuantityStepper } from "@/components/cart/QuantityStepper";
+import { getCartItemBottleTotal, getCartItemCustomizationTotal, getCartItemLineTotal } from "@/lib/utils/cart-pricing";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useCart } from "@/providers/CartProvider";
 
@@ -72,7 +73,12 @@ export function CartTable() {
 
                 <div className="rounded-[1.3rem] bg-slate-950 px-4 py-4 text-white">
                   <p className="text-[0.72rem] uppercase tracking-[0.18em] text-slate-400">Line total</p>
-                  <p className="mt-1 text-2xl font-semibold">{formatCurrency(item.quantity * item.pricePerUnit)}</p>
+                  <p className="mt-1 text-2xl font-semibold">{formatCurrency(getCartItemLineTotal(item))}</p>
+                  {item.stickerType === "custom" ? (
+                    <p className="mt-1 text-xs text-slate-300">
+                      Includes {formatCurrency(getCartItemCustomizationTotal(item))} branding fee
+                    </p>
+                  ) : null}
                 </div>
               </div>
 
@@ -106,6 +112,12 @@ export function CartTable() {
                       }
                     />
                   </label>
+                </div>
+              ) : null}
+              {item.stickerType === "custom" ? (
+                <div className="rounded-[1.2rem] border border-cyan-100 bg-cyan-50/70 px-4 py-3 text-sm text-slate-600">
+                  Bottle subtotal: {formatCurrency(getCartItemBottleTotal(item))} + custom branding:{" "}
+                  {formatCurrency(getCartItemCustomizationTotal(item))}
                 </div>
               ) : null}
             </div>

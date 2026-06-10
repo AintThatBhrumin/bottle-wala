@@ -1,8 +1,16 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ArrowRight, BadgeCheck, ShieldCheck, Sparkles, Star, Truck } from "lucide-react";
 
 import { BrandLogo } from "@/components/layout/BrandLogo";
+import { appConfig } from "@/lib/constants/domain";
 import { routes } from "@/lib/constants/routes";
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: appConfig.siteUrl
+  }
+};
 
 const trustSignals = [
   "Verified suppliers with event-ready fulfillment",

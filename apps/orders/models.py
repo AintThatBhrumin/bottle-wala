@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import CheckConstraint, Index, Q, Sum, UniqueConstraint
+from django.db.models import CheckConstraint, Index, Q, UniqueConstraint
 from django.utils import timezone
 
 from apps.products.models import Product
@@ -40,6 +40,54 @@ class Order(models.Model):
         default=Decimal("0.00"),
         validators=[MinValueValidator(Decimal("0.00"))],
     )
+    subtotal_price = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
+    customization_total = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
+    delivery_cost = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
+    commission_percentage_snapshot = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
+    commission_revenue = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
+    delivery_margin_revenue = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
+    platform_revenue = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
+    supplier_payout = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PAYMENT_PENDING)
     currency = models.CharField(max_length=3, default="INR")
     receipt = models.CharField(max_length=40, unique=True, blank=True, null=True)
@@ -65,6 +113,13 @@ class Order(models.Model):
         ]
         constraints = [
             CheckConstraint(check=Q(total_price__gte=0), name="orders_total_price_gte_0"),
+            CheckConstraint(check=Q(subtotal_price__gte=0), name="orders_subtotal_price_gte_0"),
+            CheckConstraint(check=Q(customization_total__gte=0), name="orders_custom_total_gte_0"),
+            CheckConstraint(check=Q(delivery_cost__gte=0), name="orders_delivery_cost_gte_0"),
+            CheckConstraint(check=Q(commission_revenue__gte=0), name="orders_commission_revenue_gte_0"),
+            CheckConstraint(check=Q(delivery_margin_revenue__gte=0), name="orders_delivery_margin_gte_0"),
+            CheckConstraint(check=Q(platform_revenue__gte=0), name="orders_platform_revenue_gte_0"),
+            CheckConstraint(check=Q(supplier_payout__gte=0), name="orders_supplier_payout_gte_0"),
             UniqueConstraint(
                 fields=["payment_order_id"],
                 condition=~Q(payment_order_id=""),
@@ -96,10 +151,9 @@ class Order(models.Model):
             raise ValidationError({"currency": "Currency must be a valid 3-letter ISO code."})
 
     def recalculate_total_price(self, *, commit: bool = False) -> Decimal:
-        total = self.items.aggregate(total=Sum("line_total"))["total"] or Decimal("0.00")
-        self.total_price = total
-        if commit and self.pk:
-            self.save(update_fields=["total_price", "updated_at"])
+        from apps.revenue.services import apply_order_revenue_snapshot
+
+        apply_order_revenue_snapshot(order=self, commit=commit)
         return self.total_price
 
     def get_total_in_subunits(self) -> int:
@@ -127,6 +181,8 @@ class OrderItem(models.Model):
     custom_text = models.CharField(max_length=255, blank=True)
     custom_image = models.ImageField(upload_to="orders/custom-stickers/", blank=True)
     unit_price_snapshot = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
+    sticker_fee_snapshot = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal("0.00"))
+    customization_total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     line_total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     created_at = models.DateTimeField(default=timezone.now)
 
@@ -139,6 +195,8 @@ class OrderItem(models.Model):
         constraints = [
             CheckConstraint(check=Q(quantity__gte=1), name="order_items_quantity_gte_1"),
             CheckConstraint(check=Q(unit_price_snapshot__gte=0), name="order_items_unit_price_gte_0"),
+            CheckConstraint(check=Q(sticker_fee_snapshot__gte=0), name="order_items_sticker_fee_gte_0"),
+            CheckConstraint(check=Q(customization_total__gte=0), name="order_items_custom_total_gte_0"),
             CheckConstraint(check=Q(line_total__gte=0), name="order_items_line_total_gte_0"),
         ]
 
@@ -162,7 +220,16 @@ class OrderItem(models.Model):
             )
 
     def calculate_line_total(self) -> Decimal:
-        return self.product.calculate_price(self.quantity)
+        from apps.revenue.services import calculate_item_total
+
+        _, customization_cost, line_total = calculate_item_total(
+            unit_price=self.product.price_per_unit,
+            quantity=self.quantity,
+            sticker_type=self.sticker_type,
+        )
+        self.sticker_fee_snapshot = Decimal("0.00") if self.quantity == 0 else customization_cost / self.quantity
+        self.customization_total = customization_cost
+        return line_total
 
     def save(self, *args, **kwargs):
         self.unit_price_snapshot = self.product.price_per_unit

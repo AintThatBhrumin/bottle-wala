@@ -1,7 +1,8 @@
 "use client";
 
-import { ArrowRight, ShieldCheck, ShoppingBag, Sparkles, Truck } from "lucide-react";
+import { ArrowRight, ShieldCheck, ShoppingBag, Sparkles, Trash2, Truck } from "lucide-react";
 
+import { getCartItemLineTotal } from "@/lib/utils/cart-pricing";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useCart } from "@/providers/CartProvider";
 
@@ -10,7 +11,7 @@ type MiniCartPanelProps = {
 };
 
 export function MiniCartPanel({ onOpenDrawer }: MiniCartPanelProps) {
-  const { items, totalItems, totalPrice } = useCart();
+  const { items, totalItems, totalPrice, removeItem } = useCart();
 
   return (
     <aside className="overflow-hidden rounded-[2rem] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(244,248,250,0.9))] p-6 shadow-luxe">
@@ -53,8 +54,16 @@ export function MiniCartPanel({ onOpenDrawer }: MiniCartPanelProps) {
                     {item.quantity} units | {item.stickerType === "custom" ? "Custom label" : "Supplier label"}
                   </p>
                 </div>
-                <p className="text-sm font-semibold text-ink">{formatCurrency(item.quantity * item.pricePerUnit)}</p>
+                <p className="text-sm font-semibold text-ink">{formatCurrency(getCartItemLineTotal(item))}</p>
               </div>
+              <button
+                type="button"
+                onClick={() => removeItem(item.lineId)}
+                className="mt-3 inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Remove
+              </button>
             </div>
           ))
         )}

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Jal-Setu</title>
+  </head>
+  <body style="margin:0;background:#f8fafc;color:#0f172a;font-family:Arial,sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f8fafc;padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;background:#ffffff;border-radius:24px;padding:32px;">
+            <tr>
+              <td>
+                <h1 style="margin:0 0 16px;font-size:28px;">Jal-Setu</h1>
+                {% block content %}{% endblock %}
+                <p style="margin:32px 0 0;color:#64748b;font-size:14px;">
+                  Need help? Contact <a href="mailto:{{ support_email|default:'support@jalsetu.me' }}">support@jalsetu.me</a>.
+                </p>
+                <p style="margin:8px 0 0;color:#64748b;font-size:14px;">
+                  Visit <a href="{{ frontend_url|default:'https://jalsetu.me' }}">jalsetu.me</a>.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

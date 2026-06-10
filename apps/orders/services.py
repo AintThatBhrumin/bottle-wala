@@ -6,7 +6,8 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from apps.accounts.models import User
 from apps.products.models import Product
-from apps.products.services import calculate_line_total, validate_product_order_request
+from apps.products.services import validate_product_order_request
+from apps.revenue.services import apply_order_revenue_snapshot, finalize_order_revenue
 from apps.suppliers.models import Supplier
 
 from .models import Order, OrderItem
@@ -130,6 +131,8 @@ def create_order(*, customer, delivery_address: str, items: list[dict]) -> Order
 def start_order_checkout(*, customer, delivery_address: str, items: list[dict]) -> dict:
     order = create_order(customer=customer, delivery_address=delivery_address, items=items)
     payment_order = create_razorpay_order(order=order)
+    if order.is_payment_captured:
+        finalize_order_revenue(order=order)
 
     return {
         "order": order,
@@ -138,19 +141,11 @@ def start_order_checkout(*, customer, delivery_address: str, items: list[dict]) 
 
 
 def recalculate_order_total(*, order: Order, commit: bool = True) -> Decimal:
-    total_price = Decimal("0.00")
-
-    for item in order.items.select_related("product").all():
-        total_price += calculate_line_total(product=item.product, quantity=item.quantity)
-
-    order.total_price = total_price
-    if commit:
-        order.save(update_fields=["total_price", "updated_at"])
-    return total_price
+    return apply_order_revenue_snapshot(order=order, commit=commit).total
 
 
 def build_order_receipt(*, order_id: int) -> str:
-    return f"bw-order-{order_id}"
+    return f"jalsetu-order-{order_id}"
 
 
 @transaction.atomic

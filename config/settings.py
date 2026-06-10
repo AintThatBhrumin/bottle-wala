@@ -52,19 +52,30 @@ def env_int(key: str, default: int) -> int:
     return int(value)
 
 
+def env_list(key: str, default: str = "") -> list[str]:
+    return [item.strip() for item in env(key, default).split(",") if item.strip()]
+
+
 SECRET_KEY = env_first(("SECRET_KEY", "DJANGO_SECRET_KEY"), "unsafe-development-secret-key")
 DEBUG = env_bool("DEBUG", env_bool("DJANGO_DEBUG", False))
-ALLOWED_HOSTS = [
-    host.strip()
-    for host in env_first(("ALLOWED_HOSTS", "DJANGO_ALLOWED_HOSTS"), "localhost,127.0.0.1").split(",")
-    if host.strip()
-]
-CSRF_TRUSTED_ORIGINS = [
-    origin.strip()
-    for origin in env("CSRF_TRUSTED_ORIGINS", "").split(",")
-    if origin.strip()
-]
-MARKETPLACE_NAME = env("MARKETPLACE_NAME", "Bottle Wala Marketplace")
+FRONTEND_URL = env("FRONTEND_URL", "https://jalsetu.me").rstrip("/")
+BACKEND_API_URL = env("BACKEND_API_URL", "https://api.jalsetu.me").rstrip("/")
+ADMIN_URL = env("ADMIN_URL", "https://admin.jalsetu.me").rstrip("/")
+ALLOWED_HOSTS = env_list(
+    "ALLOWED_HOSTS",
+    "jalsetu.me,api.jalsetu.me,admin.jalsetu.me,localhost,127.0.0.1",
+)
+CSRF_TRUSTED_ORIGINS = env_list(
+    "CSRF_TRUSTED_ORIGINS",
+    "https://jalsetu.me,https://api.jalsetu.me,https://admin.jalsetu.me",
+)
+CORS_ALLOWED_ORIGINS = env_list(
+    "CORS_ALLOWED_ORIGINS",
+    "https://jalsetu.me,https://admin.jalsetu.me,http://localhost:3000,http://127.0.0.1:3000",
+)
+MARKETPLACE_NAME = env("MARKETPLACE_NAME", "Jal-Setu")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "Jal-Setu <no-reply@jalsetu.me>")
+SUPPORT_EMAIL = env("SUPPORT_EMAIL", "support@jalsetu.me")
 
 if not DEBUG and SECRET_KEY == "unsafe-development-secret-key":
     raise ImproperlyConfigured("Set DJANGO_SECRET_KEY in the environment for non-debug deployments.")
@@ -82,11 +93,13 @@ INSTALLED_APPS = [
     "apps.suppliers.apps.SuppliersConfig",
     "apps.products.apps.ProductsConfig",
     "apps.orders.apps.OrdersConfig",
+    "apps.revenue.apps.RevenueConfig",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "common.middleware.DomainAwareCorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -100,7 +113,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -151,6 +164,7 @@ RAZORPAY_KEY_ID = env("RAZORPAY_KEY_ID", "") or ""
 RAZORPAY_KEY_SECRET = env("RAZORPAY_KEY_SECRET", "") or ""
 RAZORPAY_API_BASE_URL = env("RAZORPAY_API_BASE_URL", "https://api.razorpay.com")
 RAZORPAY_TIMEOUT_SECONDS = env_int("RAZORPAY_TIMEOUT_SECONDS", 15)
+DEMO_PAYMENT_MODE = env_bool("DEMO_PAYMENT_MODE", not (RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET))
 
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG

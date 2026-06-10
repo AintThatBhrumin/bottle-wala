@@ -15,6 +15,21 @@ export type CheckoutPayload = {
   items: CartItem[];
 };
 
+export type SupplierProfilePayload = {
+  business_name: string;
+  location: string;
+};
+
+export type ProductPayload = {
+  name: string;
+  description: string;
+  price_per_unit: string;
+  min_order_quantity: number;
+  sticker_options: Array<{
+    type: "supplier" | "custom";
+  }>;
+};
+
 export type PaymentVerificationPayload = {
   razorpay_payment_id: string;
   razorpay_order_id: string;
@@ -105,6 +120,18 @@ export const marketplaceApi = {
   },
   async getMySupplierProfile() {
     const response = await apiClient.get<Supplier>("/proxy/suppliers/mine/");
+    return response.data;
+  },
+  async createSupplierProfile(payload: SupplierProfilePayload) {
+    const response = await apiClient.post<Supplier>("/proxy/suppliers/", payload);
+    return response.data;
+  },
+  async getMyProducts() {
+    const response = await apiClient.get<PaginatedResponse<Product> | Product[]>("/proxy/products/mine/");
+    return Array.isArray(response.data) ? response.data : response.data.results;
+  },
+  async createProduct(payload: ProductPayload) {
+    const response = await apiClient.post<Product>("/proxy/products/", payload);
     return response.data;
   }
 };

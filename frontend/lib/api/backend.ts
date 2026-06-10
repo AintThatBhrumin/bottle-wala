@@ -1,8 +1,9 @@
 import { cookies } from "next/headers";
 
 import { ACCESS_COOKIE, REFRESH_COOKIE, secureCookie } from "@/lib/auth/cookies";
+import { appConfig } from "@/lib/constants/domain";
 
-const backendBaseUrl = process.env.BACKEND_API_URL ?? "http://127.0.0.1:8000/api";
+const backendBaseUrl = process.env.BACKEND_API_URL ?? `${appConfig.apiUrl}/api`;
 
 type BackendRequestOptions = {
   method?: string;

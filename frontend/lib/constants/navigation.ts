@@ -47,6 +47,13 @@ export const navigationItems: NavigationItem[] = [
     contexts: ["dashboard", "public"]
   },
   {
+    href: routes.revenueDashboard,
+    label: "Revenue",
+    authOnly: true,
+    roles: ["admin"],
+    contexts: ["dashboard", "public"]
+  },
+  {
     href: routes.login,
     label: "Login",
     guestOnly: true,

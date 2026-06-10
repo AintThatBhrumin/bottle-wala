@@ -4,8 +4,9 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { CartItem, Product } from "@/types/marketplace";
+import { DEFAULT_CUSTOM_STICKER_FEE_PER_BOTTLE, getCartItemLineTotal } from "@/lib/utils/cart-pricing";
 
-const storageKey = "bottle-wala-cart";
+const storageKey = "jal-setu-cart";
 
 function createLineId() {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -19,6 +20,7 @@ function normalizeStoredItems(items: CartItem[]) {
   return items.map((item) => ({
     ...item,
     lineId: item.lineId ?? createLineId(),
+    customStickerFeePerBottle: item.customStickerFeePerBottle ?? DEFAULT_CUSTOM_STICKER_FEE_PER_BOTTLE,
     customImage: null
   }));
 }
@@ -41,7 +43,7 @@ type CartStore = {
 function deriveCart(items: CartItem[]) {
   const supplierId = items[0]?.supplierId ?? null;
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce((sum, item) => sum + item.pricePerUnit * item.quantity, 0);
+  const totalPrice = items.reduce((sum, item) => sum + getCartItemLineTotal(item), 0);
 
   return {
     supplierId,
@@ -79,6 +81,7 @@ export const useCartStore = create<CartStore>()(
             name: product.name,
             supplierName: product.supplier_name,
             pricePerUnit: Number(product.price_per_unit),
+            customStickerFeePerBottle: DEFAULT_CUSTOM_STICKER_FEE_PER_BOTTLE,
             minOrderQuantity: product.min_order_quantity,
             quantity: overrides?.quantity ?? product.min_order_quantity,
             stickerType: overrides?.stickerType ?? "supplier",

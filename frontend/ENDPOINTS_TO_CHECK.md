@@ -1,60 +1,84 @@
 # Jal-Setu Endpoints To Check
 
-Base URL while running locally:
+Production domains:
+
+- Frontend: `https://jalsetu.me`
+- Backend API: `https://api.jalsetu.me`
+- Admin: `https://admin.jalsetu.me`
+
+Local development frontend:
 
 `http://127.0.0.1:3000`
 
-## Main app routes
+## Production App Routes
 
-- Home: `http://127.0.0.1:3000/`
-- Login: `http://127.0.0.1:3000/login`
-- Register: `http://127.0.0.1:3000/register`
-- Suppliers: `http://127.0.0.1:3000/suppliers`
-- Cart: `http://127.0.0.1:3000/cart`
-- Checkout: `http://127.0.0.1:3000/checkout`
-- Orders: `http://127.0.0.1:3000/orders`
-- Supplier dashboard: `http://127.0.0.1:3000/supplier-dashboard`
+- Home: `https://jalsetu.me/`
+- Login: `https://jalsetu.me/login`
+- Register: `https://jalsetu.me/register`
+- Suppliers: `https://jalsetu.me/suppliers`
+- Cart: `https://jalsetu.me/cart`
+- Checkout: `https://jalsetu.me/checkout`
+- Orders: `https://jalsetu.me/orders`
+- Supplier dashboard: `https://jalsetu.me/supplier-dashboard`
+- Admin revenue dashboard: `https://jalsetu.me/revenue`
+- Django admin: `https://admin.jalsetu.me/admin/`
 
-## Notes on protected routes
+## SEO Endpoints
 
-- `/suppliers`, `/cart`, `/checkout`, `/orders`, and `/supplier-dashboard` require authentication.
-- If you are not logged in, the app redirects you to `/login`.
-- After creating a customer account, the app currently lands on `/suppliers`.
+- Sitemap: `https://jalsetu.me/sitemap.xml`
+- Robots: `https://jalsetu.me/robots.txt`
+- Canonical public URL: `https://jalsetu.me`
 
-## Useful frontend API endpoints
+## Protected Route Notes
 
-These are the Next.js routes exposed by the frontend app itself.
+- `/suppliers`, `/cart`, `/checkout`, `/orders`, `/supplier-dashboard`, and `/revenue` require authentication.
+- `/revenue` is admin-only. Supplier and customer users are redirected to their normal dashboard route.
+- `/cart`, `/checkout`, and `/orders` are customer-only.
+- `/supplier-dashboard` is supplier/admin-only.
 
-- Login API: `http://127.0.0.1:3000/api/auth/login`
-- Register API: `http://127.0.0.1:3000/api/auth/register`
-- Logout API: `http://127.0.0.1:3000/api/auth/logout`
-- Current user API: `http://127.0.0.1:3000/api/auth/me`
-- Refresh session API: `http://127.0.0.1:3000/api/auth/refresh`
+## Frontend API Routes
 
-## Proxy API endpoints used in the main flow
+These routes are exposed by the Next.js app and proxy to the backend where needed.
 
-These are the frontend proxy routes that forward to the backend.
+- Login API: `https://jalsetu.me/api/auth/login`
+- Register API: `https://jalsetu.me/api/auth/register`
+- Logout API: `https://jalsetu.me/api/auth/logout`
+- Current user API: `https://jalsetu.me/api/auth/me`
+- Refresh session API: `https://jalsetu.me/api/auth/refresh`
 
-- Suppliers list: `http://127.0.0.1:3000/api/proxy/suppliers/`
-- Single supplier example: `http://127.0.0.1:3000/api/proxy/suppliers/<supplier-id>/`
-- Current supplier profile: `http://127.0.0.1:3000/api/proxy/suppliers/mine/`
-- Products by supplier example: `http://127.0.0.1:3000/api/proxy/products/?supplier=<supplier-id>`
-- Create order: `http://127.0.0.1:3000/api/proxy/orders/`
-- Customer order history: `http://127.0.0.1:3000/api/proxy/orders/history/`
-- Supplier incoming orders: `http://127.0.0.1:3000/api/proxy/orders/incoming/`
-- Verify payment example: `http://127.0.0.1:3000/api/proxy/orders/<order-id>/verify-payment/`
-- Payment failure example: `http://127.0.0.1:3000/api/proxy/orders/<order-id>/payment-failed/`
+## Backend API Routes
 
-## Brand asset endpoint
+These are direct backend API routes.
 
-- Logo image: `http://127.0.0.1:3000/brand/jal-setu-logo.png`
+- Suppliers list: `https://api.jalsetu.me/api/suppliers/`
+- Single supplier example: `https://api.jalsetu.me/api/suppliers/<supplier-id>/`
+- Current supplier profile: `https://api.jalsetu.me/api/suppliers/mine/`
+- Products by supplier example: `https://api.jalsetu.me/api/products/?supplier=<supplier-id>`
+- Create order: `https://api.jalsetu.me/api/orders/`
+- Customer order history: `https://api.jalsetu.me/api/orders/history/`
+- Supplier incoming orders: `https://api.jalsetu.me/api/orders/incoming/`
+- Verify payment example: `https://api.jalsetu.me/api/orders/<order-id>/verify-payment/`
+- Payment failure example: `https://api.jalsetu.me/api/orders/<order-id>/payment-failed/`
+- Revenue dashboard: `https://api.jalsetu.me/api/revenue/dashboard/`
+- Monthly revenue: `https://api.jalsetu.me/api/revenue/monthly/`
+- Supplier payouts: `https://api.jalsetu.me/api/supplier/payouts/`
+- Upgrade subscription: `https://api.jalsetu.me/api/subscription/upgrade/`
+- Promote supplier: `https://api.jalsetu.me/api/supplier/promote/`
 
-## Recommended manual check order
+## Brand Asset Endpoint
 
-1. Open `/`
-2. Open `/register`
-3. Create an account and confirm redirect to `/suppliers`
+- Logo image: `https://jalsetu.me/brand/jal-setu-logo.png`
+
+## Recommended Manual Check Order
+
+1. Open `https://jalsetu.me/`
+2. Open `https://jalsetu.me/register`
+3. Create a customer account and confirm redirect to `/suppliers`
 4. Open `/cart`
 5. Open `/orders`
-6. Open `/api/auth/me`
-7. Open `/api/proxy/suppliers/`
+6. Sign in as a supplier and open `/supplier-dashboard`
+7. Sign in as an admin and open `/revenue`
+8. Open `/api/auth/me`
+9. Open `https://api.jalsetu.me/api/suppliers/`
+10. Open `https://jalsetu.me/sitemap.xml`
+11. Open `https://jalsetu.me/robots.txt`

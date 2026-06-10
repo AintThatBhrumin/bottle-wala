@@ -7,9 +7,17 @@ import { getDefaultRouteForRole } from "@/lib/utils/navigation";
 import type { UserRole } from "@/types/auth";
 
 const authPaths = [routes.login, routes.register];
-const sessionPaths = [routes.suppliers, routes.cart, routes.checkout, routes.orders, routes.supplierDashboard];
+const sessionPaths = [
+  routes.suppliers,
+  routes.cart,
+  routes.checkout,
+  routes.orders,
+  routes.supplierDashboard,
+  routes.revenueDashboard
+];
 const customerOnlyPaths = [routes.cart, routes.checkout, routes.orders];
 const supplierOnlyPaths = [routes.supplierDashboard];
+const adminOnlyPaths = [routes.revenueDashboard];
 
 function isProtected(pathname: string) {
   return sessionPaths.some((path) => pathname.startsWith(path));
@@ -36,6 +44,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(routes.suppliers, request.url));
   }
 
+  if (adminOnlyPaths.some((path) => pathname.startsWith(path)) && role && role !== "admin") {
+    return NextResponse.redirect(new URL(getDefaultRouteForRole(role), request.url));
+  }
+
   if (customerOnlyPaths.some((path) => pathname.startsWith(path)) && role && (role === "supplier" || role === "admin")) {
     return NextResponse.redirect(new URL(routes.supplierDashboard, request.url));
   }
@@ -51,6 +63,7 @@ export const config = {
     "/cart/:path*",
     "/checkout/:path*",
     "/orders/:path*",
-    "/supplier-dashboard/:path*"
+    "/supplier-dashboard/:path*",
+    "/revenue/:path*"
   ]
 };

@@ -6,5 +6,6 @@ export const routes = {
   cart: "/cart",
   checkout: "/checkout",
   orders: "/orders",
-  supplierDashboard: "/supplier-dashboard"
+  supplierDashboard: "/supplier-dashboard",
+  revenueDashboard: "/revenue"
 } as const;

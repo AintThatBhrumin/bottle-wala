@@ -36,8 +36,8 @@ def ensure_razorpay_is_configured() -> None:
 
 def build_checkout_payment_payload(*, order: Order, gateway_order: dict[str, Any]) -> dict[str, Any]:
     return {
-        "provider": "razorpay",
-        "key": settings.RAZORPAY_KEY_ID,
+        "provider": order.payment_provider or "razorpay",
+        "key": settings.RAZORPAY_KEY_ID if order.payment_provider != "demo" else "demo",
         "amount": gateway_order["amount"],
         "currency": gateway_order["currency"],
         "order_id": gateway_order["id"],
@@ -52,6 +52,9 @@ def build_checkout_payment_payload(*, order: Order, gateway_order: dict[str, Any
 
 
 def create_razorpay_order(*, order: Order) -> dict[str, Any]:
+    if settings.DEMO_PAYMENT_MODE and not (settings.RAZORPAY_KEY_ID and settings.RAZORPAY_KEY_SECRET):
+        return create_demo_payment_order(order=order)
+
     ensure_razorpay_is_configured()
 
     payload = {
@@ -85,6 +88,37 @@ def create_razorpay_order(*, order: Order) -> dict[str, Any]:
     return response
 
 
+def create_demo_payment_order(*, order: Order) -> dict[str, Any]:
+    payment_order_id = f"demo_order_{order.id}"
+    order.payment_provider = "demo"
+    order.payment_order_id = payment_order_id
+    order.payment_status = Order.PaymentStatus.CAPTURED
+    order.payment_failure_reason = ""
+    order.payment_captured_at = timezone.now()
+    order.status = Order.Status.PENDING
+    order.save(
+        update_fields=[
+            "payment_provider",
+            "payment_order_id",
+            "payment_status",
+            "payment_failure_reason",
+            "payment_captured_at",
+            "status",
+            "updated_at",
+        ]
+    )
+    return {
+        "id": payment_order_id,
+        "amount": order.get_total_in_subunits(),
+        "currency": order.currency,
+        "notes": {
+            "internal_order_id": str(order.id),
+            "supplier_id": str(order.assigned_supplier_id or ""),
+            "mode": "demo",
+        },
+    }
+
+
 def verify_razorpay_payment(
     *,
     order: Order,
@@ -107,6 +141,9 @@ def verify_razorpay_payment(
             raise ValidationError({"payment": ["This order has already been captured with a different payment id."]})
         if order.payment_signature and order.payment_signature != razorpay_signature:
             raise ValidationError({"payment": ["This order has already been captured with a different signature."]})
+        from apps.revenue.services import finalize_order_revenue
+
+        finalize_order_revenue(order=order)
         return order
 
     expected_signature = hmac.new(
@@ -172,6 +209,9 @@ def verify_razorpay_payment(
             "updated_at",
         ]
     )
+    from apps.revenue.services import finalize_order_revenue
+
+    finalize_order_revenue(order=order)
     return order
 
 

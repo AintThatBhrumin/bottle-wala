@@ -1,6 +1,12 @@
-# Bottle Wala Backend
+# Jal-Setu
 
-Production-oriented Django REST backend for a SaaS marketplace where customers can order water bottles for events from multiple suppliers.
+Production-oriented marketplace where customers order customized water bottles for events from multiple suppliers.
+
+## Production Domains
+
+- Frontend: `https://jalsetu.me`
+- Backend API: `https://api.jalsetu.me`
+- Admin: `https://admin.jalsetu.me`
 
 ## Stack
 
@@ -37,7 +43,7 @@ Production-oriented Django REST backend for a SaaS marketplace where customers c
 
 1. Install dependencies: `pip install -r requirements.txt`
 2. Create a PostgreSQL database and user.
-3. Copy `.env.example` to `.env` and fill in secrets.
+3. Copy `.env.example` to `.env` and fill in secrets/domain values.
 4. Run migrations: `python manage.py makemigrations && python manage.py migrate`
 5. Create a superuser: `python manage.py createsuperuser`
 6. Start the API: `python manage.py runserver`
@@ -54,3 +60,7 @@ Production-oriented Django REST backend for a SaaS marketplace where customers c
 - `POST /api/auth/token/`
 - `POST /api/auth/token/refresh/`
 - `GET /api/auth/me/`
+
+## Deployment
+
+See `DEPLOYMENT.md` for production domain, SEO, CORS, CSRF, and admin-domain configuration.

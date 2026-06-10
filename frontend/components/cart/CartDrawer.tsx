@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ShieldCheck, Truck, X } from "lucide-react";
 
+import { getCartItemLineTotal } from "@/lib/utils/cart-pricing";
 import { routes } from "@/lib/constants/routes";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useCart } from "@/providers/CartProvider";
@@ -99,7 +100,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                         <span>
                           {item.quantity} units | {item.stickerType === "custom" ? "Custom label" : "Supplier label"}
                         </span>
-                        <span className="font-semibold text-ink">{formatCurrency(item.quantity * item.pricePerUnit)}</span>
+                        <span className="font-semibold text-ink">{formatCurrency(getCartItemLineTotal(item))}</span>
                       </div>
                       {item.customText ? <p className="mt-2 text-sm text-slate-500">"{item.customText}"</p> : null}
                     </div>

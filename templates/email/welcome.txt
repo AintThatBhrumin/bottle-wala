@@ -1,0 +1,7 @@
+Welcome to Jal-Setu.
+
+You can access the marketplace at https://jalsetu.me.
+
+Suppliers can manage their profile and catalog after signing in. Platform admins can use https://admin.jalsetu.me/admin/.
+
+Need help? Contact support@jalsetu.me.

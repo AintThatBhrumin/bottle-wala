@@ -9,8 +9,30 @@ import { EmptyState } from "@/components/marketplace/EmptyState";
 import { marketplaceApi } from "@/lib/api/marketplace";
 import { routes } from "@/lib/constants/routes";
 import { openRazorpayCheckout } from "@/lib/payments/razorpay";
+import { getCartItemLineTotal } from "@/lib/utils/cart-pricing";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useCart } from "@/providers/CartProvider";
+
+function extractCheckoutError(err: any) {
+  const error = err?.response?.data?.error;
+  const fieldErrors = error?.fields;
+
+  if (fieldErrors && typeof fieldErrors === "object") {
+    for (const value of Object.values(fieldErrors)) {
+      if (Array.isArray(value) && value.length > 0) {
+        return String(value[0]);
+      }
+      if (value && typeof value === "object") {
+        const nested = Object.values(value).flat();
+        if (nested.length > 0) {
+          return String(nested[0]);
+        }
+      }
+    }
+  }
+
+  return error?.detail ?? err?.message ?? "Unable to start secure payment for this order.";
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -57,6 +79,13 @@ export default function CheckoutPage() {
         items
       });
 
+      if (session.payment.provider === "demo") {
+        clearCart();
+        router.push(routes.orders);
+        router.refresh();
+        return;
+      }
+
       await openRazorpayCheckout({
         session,
         onSuccess: async (paymentResult) => {
@@ -87,7 +116,7 @@ export default function CheckoutPage() {
         }
       });
     } catch (err: any) {
-      setError(err?.response?.data?.error?.detail ?? "Unable to start secure payment for this order.");
+      setError(extractCheckoutError(err));
     } finally {
       setIsSubmitting(false);
     }
@@ -180,7 +209,7 @@ export default function CheckoutPage() {
                         </p>
                         {item.customText ? <p className="mt-1 text-sm text-slate-500">"{item.customText}"</p> : null}
                       </div>
-                      <p className="text-sm font-semibold text-ink">{formatCurrency(item.quantity * item.pricePerUnit)}</p>
+                      <p className="text-sm font-semibold text-ink">{formatCurrency(getCartItemLineTotal(item))}</p>
                     </div>
                   </div>
                 ))}

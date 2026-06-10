@@ -39,6 +39,7 @@ export type CartItem = {
   name: string;
   supplierName: string;
   pricePerUnit: number;
+  customStickerFeePerBottle?: number;
   minOrderQuantity: number;
   quantity: number;
   stickerType: "supplier" | "custom";
@@ -65,6 +66,14 @@ export type Order = {
   user_email: string;
   supplier: Pick<Supplier, "id" | "business_name" | "location" | "is_verified"> | null;
   total_price: string;
+  subtotal_price: string;
+  customization_total: string;
+  delivery_cost: string;
+  commission_percentage_snapshot: string;
+  commission_revenue: string;
+  delivery_margin_revenue: string;
+  platform_revenue: string;
+  supplier_payout: string;
   status: "payment_pending" | "pending" | "accepted" | "delivered" | "cancelled";
   payment_status: "created" | "authorized" | "captured" | "failed" | "refunded";
   currency: string;
@@ -76,7 +85,7 @@ export type Order = {
 };
 
 export type OrderCheckoutPayment = {
-  provider: "razorpay";
+  provider: "razorpay" | "demo";
   key: string;
   amount: number;
   currency: string;

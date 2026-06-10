@@ -21,8 +21,14 @@ COPY . /app
 
 RUN SECRET_KEY=build-secret \
     DEBUG=False \
-    ALLOWED_HOSTS=localhost \
-    DB_NAME=bottle_wala \
+    FRONTEND_URL=https://jalsetu.me \
+    BACKEND_API_URL=https://api.jalsetu.me \
+    ADMIN_URL=https://admin.jalsetu.me \
+    ALLOWED_HOSTS=jalsetu.me,api.jalsetu.me,admin.jalsetu.me,localhost \
+    CSRF_TRUSTED_ORIGINS=https://jalsetu.me,https://api.jalsetu.me,https://admin.jalsetu.me \
+    CORS_ALLOWED_ORIGINS=https://jalsetu.me,https://admin.jalsetu.me \
+    MARKETPLACE_NAME=Jal-Setu \
+    DB_NAME=jal_setu \
     DB_USER=postgres \
     DB_PASSWORD=build-password \
     DB_HOST=host.docker.internal \

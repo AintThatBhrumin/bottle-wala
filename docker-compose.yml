@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: bottle-wala-backend:latest
+    image: jal-setu-backend:latest
     env_file:
       - .env
     ports:
