@@ -1,10 +1,22 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-import { ACCESS_COOKIE, REFRESH_COOKIE, ROLE_COOKIE } from "@/lib/auth/cookies";
-import { routes } from "@/lib/constants/routes";
-import { getDefaultRouteForRole } from "@/lib/utils/navigation";
-import type { UserRole } from "@/types/auth";
+const ACCESS_COOKIE = "jalsetu_access_token";
+const REFRESH_COOKIE = "jalsetu_refresh_token";
+const ROLE_COOKIE = "jalsetu_user_role";
+
+type UserRole = "customer" | "supplier" | "admin";
+
+const routes = {
+  login: "/login",
+  register: "/register",
+  suppliers: "/suppliers",
+  cart: "/cart",
+  checkout: "/checkout",
+  orders: "/orders",
+  supplierDashboard: "/supplier-dashboard",
+  revenueDashboard: "/revenue"
+} as const;
 
 const authPaths = [routes.login, routes.register];
 const sessionPaths = [
@@ -21,6 +33,14 @@ const adminOnlyPaths = [routes.revenueDashboard];
 
 function isProtected(pathname: string) {
   return sessionPaths.some((path) => pathname.startsWith(path));
+}
+
+function getDefaultRouteForRole(role?: UserRole | null) {
+  if (role === "supplier" || role === "admin") {
+    return routes.supplierDashboard;
+  }
+
+  return routes.suppliers;
 }
 
 export function middleware(request: NextRequest) {
