@@ -137,6 +137,9 @@ DATABASES = {
         "HOST": env_first(("DB_HOST", "POSTGRES_HOST"), "host.docker.internal"),
         "PORT": env_first(("DB_PORT", "POSTGRES_PORT"), "5432"),
         "CONN_MAX_AGE": env_int("DB_CONN_MAX_AGE", env_int("POSTGRES_CONN_MAX_AGE", 60)),
+        "OPTIONS": {
+            "sslmode": env("DB_SSLMODE", "prefer"),
+        },
     }
 }
 
