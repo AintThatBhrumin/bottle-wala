@@ -10,7 +10,10 @@ type NavigationOptions = {
 };
 
 export function getDefaultRouteForRole(role?: UserRole | null) {
-  if (role === "supplier" || role === "admin") {
+  if (role === "admin") {
+    return routes.revenueDashboard;
+  }
+  if (role === "supplier") {
     return routes.supplierDashboard;
   }
 

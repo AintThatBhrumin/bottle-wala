@@ -36,7 +36,10 @@ function isProtected(pathname: string) {
 }
 
 function getDefaultRouteForRole(role?: UserRole | null) {
-  if (role === "supplier" || role === "admin") {
+  if (role === "admin") {
+    return routes.revenueDashboard;
+  }
+  if (role === "supplier") {
     return routes.supplierDashboard;
   }
 
@@ -60,8 +63,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(getDefaultRouteForRole(role), request.url));
   }
 
-  if (supplierOnlyPaths.some((path) => pathname.startsWith(path)) && role && role !== "supplier" && role !== "admin") {
-    return NextResponse.redirect(new URL(routes.suppliers, request.url));
+  if (supplierOnlyPaths.some((path) => pathname.startsWith(path)) && role && role !== "supplier") {
+    return NextResponse.redirect(new URL(getDefaultRouteForRole(role), request.url));
   }
 
   if (adminOnlyPaths.some((path) => pathname.startsWith(path)) && role && role !== "admin") {
@@ -69,7 +72,7 @@ export function middleware(request: NextRequest) {
   }
 
   if (customerOnlyPaths.some((path) => pathname.startsWith(path)) && role && (role === "supplier" || role === "admin")) {
-    return NextResponse.redirect(new URL(routes.supplierDashboard, request.url));
+    return NextResponse.redirect(new URL(getDefaultRouteForRole(role), request.url));
   }
 
   return NextResponse.next();

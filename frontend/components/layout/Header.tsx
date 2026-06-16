@@ -140,7 +140,7 @@ export function Header({ variant }: HeaderProps) {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          {user && (user.role === "supplier" || user.role === "admin") && !pathname.startsWith(routes.supplierDashboard) ? (
+          {user?.role === "supplier" && !pathname.startsWith(routes.supplierDashboard) ? (
             <Link href={routes.supplierDashboard} className="bw-btn-secondary px-4 py-2.5">
               <LayoutDashboard className="h-4 w-4" />
               Dashboard

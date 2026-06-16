@@ -43,7 +43,7 @@ export const navigationItems: NavigationItem[] = [
     href: routes.supplierDashboard,
     label: "Dashboard",
     authOnly: true,
-    roles: ["supplier", "admin"],
+    roles: ["supplier"],
     contexts: ["dashboard", "public"]
   },
   {

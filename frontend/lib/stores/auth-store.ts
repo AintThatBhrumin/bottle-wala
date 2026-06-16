@@ -24,7 +24,10 @@ type AuthStore = {
 let initializePromise: Promise<void> | null = null;
 
 function getDefaultRouteForRole(role?: UserRole | null) {
-  if (role === "supplier" || role === "admin") {
+  if (role === "admin") {
+    return routes.revenueDashboard;
+  }
+  if (role === "supplier") {
     return routes.supplierDashboard;
   }
 
