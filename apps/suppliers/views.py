@@ -45,7 +45,7 @@ class SupplierViewSet(
     def perform_create(self, serializer):
         if self.request.user.role != self.request.user.Role.SUPPLIER:
             raise PermissionDenied("Only supplier users can create a supplier profile.")
-        serializer.save(user=self.request.user)
+        serializer.save()
 
     def perform_update(self, serializer):
         if not (self.request.user.is_superuser or self.request.user.role == self.request.user.Role.ADMIN):
