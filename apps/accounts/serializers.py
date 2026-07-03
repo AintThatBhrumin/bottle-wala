@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from .models import User
+from .models import GuestSession, User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -48,3 +48,22 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data = super().validate(attrs)
         data["user"] = UserSerializer(self.user).data
         return data
+
+
+class GuestSessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GuestSession
+        fields = ["guest_id", "cart_data", "browsing_history", "saved_suppliers", "expires_at"]
+        read_only_fields = ["guest_id", "expires_at"]
+
+    def create(self, validated_data):
+        # Cart data, browsing history, and saved suppliers come from frontend
+        return GuestSession.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        # Update guest session data
+        instance.cart_data = validated_data.get("cart_data", instance.cart_data)
+        instance.browsing_history = validated_data.get("browsing_history", instance.browsing_history)
+        instance.saved_suppliers = validated_data.get("saved_suppliers", instance.saved_suppliers)
+        instance.save()
+        return instance
