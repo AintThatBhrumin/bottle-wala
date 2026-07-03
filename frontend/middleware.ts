@@ -4,13 +4,16 @@ import type { NextRequest } from "next/server";
 const ACCESS_COOKIE = "jalsetu_access_token";
 const REFRESH_COOKIE = "jalsetu_refresh_token";
 const ROLE_COOKIE = "jalsetu_user_role";
+const GUEST_ID_COOKIE = "jalsetu_guest_id";
 
 type UserRole = "customer" | "supplier" | "admin";
 
 const routes = {
+  home: "/",
   login: "/login",
   register: "/register",
-  suppliers: "/suppliers",
+  explore: "/explore",
+  supplier: "/supplier",
   cart: "/cart",
   checkout: "/checkout",
   orders: "/orders",
@@ -19,20 +22,18 @@ const routes = {
 } as const;
 
 const authPaths = [routes.login, routes.register];
-const sessionPaths = [
-  routes.suppliers,
-  routes.cart,
-  routes.checkout,
-  routes.orders,
-  routes.supplierDashboard,
-  routes.revenueDashboard
-];
-const customerOnlyPaths = [routes.cart, routes.checkout, routes.orders];
+const protectedCheckoutPaths = [routes.checkout, routes.orders, routes.supplierDashboard, routes.revenueDashboard];
+const guestAllowedPaths = [routes.home, routes.explore, routes.supplier, routes.cart];
+const customerOnlyPaths = [routes.checkout, routes.orders, routes.cart];
 const supplierOnlyPaths = [routes.supplierDashboard];
 const adminOnlyPaths = [routes.revenueDashboard];
 
-function isProtected(pathname: string) {
-  return sessionPaths.some((path) => pathname.startsWith(path));
+function isProtectedCheckout(pathname: string) {
+  return protectedCheckoutPaths.some((path) => pathname.startsWith(path));
+}
+
+function isGuestAllowed(pathname: string) {
+  return guestAllowedPaths.some((path) => pathname.startsWith(path));
 }
 
 function getDefaultRouteForRole(role?: UserRole | null) {
@@ -42,27 +43,35 @@ function getDefaultRouteForRole(role?: UserRole | null) {
   if (role === "supplier") {
     return routes.supplierDashboard;
   }
-
-  return routes.suppliers;
+  return routes.explore;
 }
 
 export function middleware(request: NextRequest) {
   const accessToken = request.cookies.get(ACCESS_COOKIE)?.value;
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
   const role = request.cookies.get(ROLE_COOKIE)?.value as UserRole | undefined;
+  const guestId = request.cookies.get(GUEST_ID_COOKIE)?.value;
   const hasSession = Boolean(accessToken || refreshToken);
   const { pathname } = request.nextUrl;
 
-  if (isProtected(pathname) && !hasSession) {
+  // Allow guests to browse freely (home, explore, supplier details, cart)
+  if (isGuestAllowed(pathname) && !hasSession) {
+    return NextResponse.next();
+  }
+
+  // Protect checkout-only paths - require authentication
+  if (isProtectedCheckout(pathname) && !hasSession) {
     const loginUrl = new URL(routes.login, request.url);
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
+  // Redirect authenticated users away from login/register
   if (authPaths.some((path) => pathname.startsWith(path)) && hasSession) {
     return NextResponse.redirect(new URL(getDefaultRouteForRole(role), request.url));
   }
 
+  // Role-based access control
   if (supplierOnlyPaths.some((path) => pathname.startsWith(path)) && role && role !== "supplier") {
     return NextResponse.redirect(new URL(getDefaultRouteForRole(role), request.url));
   }
@@ -80,9 +89,11 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/",
     "/login",
     "/register",
-    "/suppliers/:path*",
+    "/explore/:path*",
+    "/supplier/:path*",
     "/cart/:path*",
     "/checkout/:path*",
     "/orders/:path*",

@@ -110,7 +110,6 @@ class GuestSession(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.expires_at:
-            # Set expiry to 14 days from now
             self.expires_at = timezone.now() + timezone.timedelta(days=14)
         self.full_clean()
         super().save(*args, **kwargs)
