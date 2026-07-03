@@ -1,15 +1,11 @@
-from decimal import Decimal
-
-from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import CheckConstraint, Index, Q, UniqueConstraint
-from django.db.models.functions import Lower
-
+from django.core.validators import MinValueValidator, MaxValueValidator
+from decimal import Decimal
 from apps.suppliers.models import Supplier
 
 
 class Product(models.Model):
+    """Enhanced Product model with bottle sizes and supplier controls"""
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name="products")
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
@@ -18,65 +14,60 @@ class Product(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(Decimal("0.01"))],
     )
+    
+    # Bottle size tracking (JSON for flexibility)
+    bottle_sizes = models.JSONField(
+        default=list,
+        help_text="Available bottle sizes: [1, 5, 10, 20, 'custom']"
+    )
+    
+    # Supplier controls
     min_order_quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    max_order_quantity = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1)]
+    )
+    stock_visible = models.BooleanField(default=True)
+    recurring_delivery_enabled = models.BooleanField(default=False)
+    delivery_radius_km = models.IntegerField(default=10, validators=[MinValueValidator(1)])
+    
+    # Stock management
+    current_stock = models.PositiveIntegerField(default=0)
+    
+    # Media
     image = models.ImageField(upload_to="products/water-bottles/", blank=True)
+    images = models.JSONField(
+        default=list,
+        help_text="Additional product images URLs"
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["-created_at"]
         indexes = [
-            Index(fields=["supplier", "name"], name="products_supplier_name_idx"),
-            Index(fields=["price_per_unit"], name="products_price_idx"),
-            Index(fields=["created_at"], name="products_created_idx"),
-        ]
-        constraints = [
-            UniqueConstraint(Lower("name"), "supplier", name="products_supplier_name_ci_unique"),
-            CheckConstraint(check=Q(price_per_unit__gt=0), name="products_price_positive"),
-            CheckConstraint(check=Q(min_order_quantity__gte=1), name="products_min_order_gte_1"),
+            models.Index(fields=["supplier", "is_active"], name="product_supplier_active_idx"),
+            models.Index(fields=["price_per_unit"], name="product_price_idx"),
         ]
 
     def __str__(self) -> str:
         return f"{self.name} ({self.supplier.business_name})"
 
-    def clean(self) -> None:
-        super().clean()
-        self.name = (self.name or "").strip()
-        if not self.name:
-            raise ValidationError({"name": "Product name is required."})
-        if self.min_order_quantity < 1:
-            raise ValidationError({"min_order_quantity": "Minimum order quantity must be at least 1."})
+    def get_available_sizes(self):
+        """Return list of available bottle sizes"""
+        return self.bottle_sizes or []
 
-    def calculate_price(self, quantity: int) -> Decimal:
+    def calculate_price_for_size(self, size: str, quantity: int) -> Decimal:
+        """Calculate price based on bottle size and quantity"""
         if quantity < self.min_order_quantity:
-            raise ValidationError(
-                {"quantity": f"Quantity must be at least the minimum order quantity of {self.min_order_quantity}."}
+            raise ValueError(
+                f"Minimum order quantity is {self.min_order_quantity}"
+            )
+        if self.max_order_quantity and quantity > self.max_order_quantity:
+            raise ValueError(
+                f"Maximum order quantity is {self.max_order_quantity}"
             )
         return self.price_per_unit * quantity
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)
-
-
-class StickerOption(models.Model):
-    class Type(models.TextChoices):
-        SUPPLIER = "supplier", "Supplier"
-        CUSTOM = "custom", "Custom"
-
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="sticker_options")
-    type = models.CharField(max_length=20, choices=Type.choices)
-    template_image = models.ImageField(upload_to="products/sticker-templates/", blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["product_id", "type"]
-        indexes = [
-            Index(fields=["product", "type"], name="sticker_product_type_idx"),
-        ]
-        constraints = [
-            UniqueConstraint(fields=["product", "type"], name="sticker_unique_type_per_product"),
-        ]
-
-    def __str__(self) -> str:
-        return f"{self.product.name} - {self.get_type_display()} sticker"
