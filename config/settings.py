@@ -205,6 +205,10 @@ SIMPLE_JWT = {
     "UPDATE_LAST_LOGIN": True,
 }
 
+# Guest Session Configuration
+GUEST_SESSION_EXPIRY_DAYS = env_int("GUEST_SESSION_EXPIRY_DAYS", 14)
+GUEST_SESSION_CLEANUP_INTERVAL_HOURS = env_int("GUEST_SESSION_CLEANUP_INTERVAL_HOURS", 24)
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
